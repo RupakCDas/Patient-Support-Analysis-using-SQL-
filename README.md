@@ -24,20 +24,26 @@ A long-call is defined as any call lasting more than 5 minutes (300 seconds).
 Output the year and month in numerical format and chronological order, number of calls in each month, 
 along with the growth percentage rounded to 1 decimal place.
 
-- PART 5. &ensp; Determines which call categories dominate a specific user's interaction time. 
+- PART 5. &ensp; Determine which call categories dominate a specific user's interaction time. 
 It calculates the total time spent per category and uses a window function to find the percentage 
 that category represents relative to the user's total call time.
 
-- PART 6. &ensp; Classifies policy holders into engagement tiers (High, Medium, Low) based on their 
+- PART 6. &ensp; Classify policy holders into engagement tiers (High, Medium, Low) based on their 
 total call volume, and then ranks users within each tier based on their longest single call duration.
 ### Data Description
 This dataset has 1000 rows. 
 
-#### Data Dictionary
-
+### Data Dictionary
+| Column Name      | Data Type     |
+|------------------|---------------|
+|policy_holder_id	 |integer        |
+|case_id	         |varchar        |
+|call_category	   |varchar        |
+|call_date	       |timestamp      |
+|call_duration_secs|	integer      |
 ### Tool Used
 MYSQL
-## SQL Analysis and Questions
+### Questions and SQL Analysis 
 ##### PART 1. &ensp; Find which UHG policy holders made three, or more calls, assuming each call is identified by the case_id column.
 
 ```sql
@@ -102,7 +108,7 @@ FROM long_calls
 ORDER BY yr, mth;
 ```
 
-##### PART 5.&ensp; Determines which call categories dominate a specific user's interaction time. It calculates the total time spent per category and uses a window function to find the percentage that category represents relative to the user's total call time.
+##### PART 5.&ensp; Determine which call categories dominate a specific user's interaction time. It calculates the total time spent per category and uses a window function to find the percentage that category represents relative to the user's total call time.
 ```sql
 WITH category AS (
     SELECT 
