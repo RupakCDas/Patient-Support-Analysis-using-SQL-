@@ -50,9 +50,10 @@ SELECT * FROM (
     
 -- these are the ones we want to delete where the row number is > 1 or 2 or greater essentially
 
--- now you may want to write it like this:
 
-WITH DELETE_CTE AS (
+===================================================================================================================
+-- different approach-------------
+/* WITH DELETE_CTE AS (
          SELECT *
          FROM (
 	             SELECT policy_holder_id, case_id, call_category, call_date, call_duration_secs,
@@ -65,78 +66,67 @@ WITH DELETE_CTE AS (
 
 DELETE
 FROM DELETE_CTE ;
-====================================================================================
 
 WITH DELETE_CTE AS (
-	SELECT company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions, 
-    ROW_NUMBER() OVER (PARTITION BY company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions) AS row_num
-	FROM world_layoffs.layoffs_staging
+	SELECT 
+		  policy_holder_id, 
+		  case_id, 
+		  call_category,
+		  call_date,
+		  call_duration_secs,
+			ROW_NUMBER() OVER (
+					PARTITION BY policy_holder_id, case_id, call_category, call_date, call_duration_secs) AS row_num
+     FROM 
+        united_health.data_b2;
 )
-DELETE FROM world_layoffs.layoffs_staging
-WHERE (company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions, row_num) IN (
-	SELECT company, location, industry, total_laid_off, percentage_laid_off, `date`, stage, country, funds_raised_millions, row_num
+
+DELETE FROM united_health.data_b2
+WHERE (policy_holder_id, case_id, call_category,call_date,call_duration_secs, row_num ) 
+IN (
+	SELECT policy_holder_id, case_id, call_category,call_date, call_duration_secs, row_num
 	FROM DELETE_CTE
-) AND row_num > 1;
+    ) 
+AND row_num > 1; */
+=================================================================================================================
 
--- one solution, which I think is a good one. Is to create a new column and add those row numbers in. Then delete where row numbers are over 2, then delete that column
--- so let's do it!!
+	
+-- one solution, which I think is a good one. Is to create a new column and add those row numbers in.
+-- Then delete where row numbers are over 2, then delete that column
 
-ALTER TABLE world_layoffs.layoffs_staging ADD row_num INT;
+ALTER TABLE united_health.data_b2 ADD row_num INT;
 
+SELECT * FROM united_health.data_b2;
 
-SELECT *
-FROM world_layoffs.layoffs_staging
-;
+CREATE TABLE united_health.data_b3 (
+                         policy_holder_id VARCHAR(30), 
+		                 case_id VARCHAR(30), 
+		                 call_category TEXT,
+		                 call_date DATETIME,
+		                 call_duration_secs INT,
+	                     row_num INT );
 
-CREATE TABLE `world_layoffs`.`layoffs_staging2` (
-`company` text,
-`location`text,
-`industry`text,
-`total_laid_off` INT,
-`percentage_laid_off` text,
-`date` text,
-`stage`text,
-`country` text,
-`funds_raised_millions` int,
-row_num INT
-);
-
-INSERT INTO `world_layoffs`.`layoffs_staging2`
-(`company`,
-`location`,
-`industry`,
-`total_laid_off`,
-`percentage_laid_off`,
-`date`,
-`stage`,
-`country`,
-`funds_raised_millions`,
-`row_num`)
-SELECT `company`,
-`location`,
-`industry`,
-`total_laid_off`,
-`percentage_laid_off`,
-`date`,
-`stage`,
-`country`,
-`funds_raised_millions`,
-		ROW_NUMBER() OVER (
-			PARTITION BY company, location, industry, total_laid_off,percentage_laid_off,`date`, stage, country, funds_raised_millions
-			) AS row_num
-	FROM 
-		world_layoffs.layoffs_staging;
+INSERT INTO united_health.data_b3
+	( policy_holder_id , 
+	  case_id , 
+	  call_category ,
+	  call_date ,
+	  call_duration_secs ,
+	  row_num  )
+    SELECT  policy_holder_id, 
+		    case_id, 
+		    call_category,
+		    call_date,
+		    call_duration_secs,
+			ROW_NUMBER() OVER (
+					PARTITION BY policy_holder_id, case_id, call_category, call_date, call_duration_secs) AS row_num
+	FROM united_health.data_b2;
+		
 
 -- now that we have this we can delete rows were row_num is greater than 2
 
-DELETE FROM world_layoffs.layoffs_staging2
+DELETE FROM united_health.data_b3
 WHERE row_num >= 2;
-
-
-
-
-
-
+-- ===============================================================================
 
 -- 2. Standardize Data
 
